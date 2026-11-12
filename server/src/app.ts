@@ -1,0 +1,85 @@
+import express, { type Request, type Response } from 'express'
+import cors from 'cors'
+import multer from 'multer'
+import { z } from 'zod'
+import type { ChatMsg, Llm, ModelSelection } from './types.js'
+import type { ModelList } from './models/registry.js'
+import type { VoiceKind } from './voice/tts-gemini.js'
+import { runPartner } from './agents/partner.js'
+import { runImprove } from './agents/improve.js'
+import { runCoach } from './agents/coach.js'
+import { runGrammar } from './agents/grammar.js'
+import { runEssay } from './agents/essay.js'
+import { runEmail } from './agents/email.js'
+
+export interface Deps {
+  listModels: () => Promise<ModelList>
+  makeLlm: (candidates: ModelSelection[], temperature?: number) => Llm
+  stt: (audio: Buffer, filename: string, mime: string) => Promise<string>
+  tts: (text: string, voice: VoiceKind) => Promise<Buffer | null>
+}
+
+const Sel = z.object({ provider: z.enum(['groq', 'gemini']), model: z.string().min(1) })
+const Base = z.object({ model: Sel, fallbacks: z.array(Sel).default([]) })
+const Msgs = z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string() })).min(1)
+
+export function createApp(deps: Deps) {
+  const app = express()
+  app.use(cors())
+  app.use(express.json({ limit: '1mb' }))
+  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } })
+
+  /** Validate body, build an Llm with fallback chain, run the handler, map errors. */
+  const route = <S extends z.ZodTypeAny>(schema: S, run: (llm: Llm, body: z.infer<S>) => Promise<unknown>) =>
+    async (req: Request, res: Response) => {
+      const parsed = schema.safeParse(req.body)
+      if (!parsed.success) return void res.status(400).json({ error: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ') })
+      const b = parsed.data as z.infer<typeof Base>
+      try {
+        const llm = deps.makeLlm([b.model, ...b.fallbacks])
+        const out = await run(llm, parsed.data)
+        res.json({ ...(typeof out === 'object' && out !== null ? out : { result: out }), modelUsed: llm.lastUsed ?? b.model })
+      } catch (e) {
+        res.status(502).json({ error: (e as Error).message ?? 'Model error' })
+      }
+    }
+
+  app.get('/api/health', (_q, r) => void r.json({ ok: true }))
+  app.get('/api/models', async (_q, r) => void r.json(await deps.listModels()))
+
+  app.post('/api/chat', route(Base.extend({ messages: Msgs }), async (llm, b) => ({ reply: await runPartner(llm, b.messages as ChatMsg[]) })))
+  app.post('/api/coach', route(Base.extend({ messages: Msgs }), (llm, b) => runCoach(llm, b.messages as ChatMsg[])))
+  app.post('/api/improve', route(Base.extend({ text: z.string().min(1) }), (llm, b) => runImprove(llm, b.text)))
+  app.post('/api/grammar', route(
+    Base.and(z.discriminatedUnion('mode', [
+      z.object({ mode: z.literal('tense'), tense: z.string().min(1) }),
+      z.object({ mode: z.literal('voice'), direction: z.enum(['active-to-passive', 'passive-to-active']), sentence: z.string().min(1) }),
+    ])),
+    (llm, b) => runGrammar(llm, b as any),
+  ))
+  app.post('/api/essay', route(Base.extend({ topic: z.string().min(1) }), (llm, b) => runEssay(llm, b.topic)))
+  app.post('/api/email', route(
+    Base.extend({ notes: z.string().default(''), recipient: z.string().optional(), tone: z.string().optional(), length: z.string().optional(), ownDraft: z.string().optional() })
+      .refine((v) => v.notes || v.ownDraft, { message: 'notes or ownDraft required' }),
+    (llm, b) => runEmail(llm, b),
+  ))
+
+  app.post('/api/stt', upload.single('audio'), async (req, res) => {
+    if (!req.file) return void res.status(400).json({ error: 'audio file required' })
+    try {
+      res.json({ text: await deps.stt(req.file.buffer, req.file.originalname || 'audio.webm', req.file.mimetype || 'audio/webm') })
+    } catch (e) {
+      res.status(502).json({ error: (e as Error).message })
+    }
+  })
+
+  app.post('/api/tts', async (req, res) => {
+    const p = z.object({ text: z.string().min(1).max(8000), voice: z.enum(['female', 'male']) }).safeParse(req.body)
+    if (!p.success) return void res.status(400).json({ error: 'text and voice required' })
+    const audio = await deps.tts(p.data.text, p.data.voice)
+    if (!audio) return void res.status(501).json({ fallback: true, error: 'Server TTS unavailable; use browser voice' })
+    res.type('audio/wav').send(audio)
+  })
+
+  return app
+}

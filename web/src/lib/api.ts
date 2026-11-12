@@ -1,0 +1,31 @@
+import { buildFallbacks, resolveSelection, type ModelsResponse, type Sel } from './models'
+
+let current: { model: Sel; fallbacks: Sel[] } | null = null
+export const setCurrentModel = (list: ModelsResponse, model: Sel) => { current = { model, fallbacks: buildFallbacks(list, model) } }
+export const currentModel = () => current?.model ?? null
+
+async function json<T>(res: Response): Promise<T> {
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error((body as any).error ?? `Request failed (${res.status})`)
+  return body as T
+}
+
+export const fetchModels = async (): Promise<ModelsResponse> => {
+  const list = await json<ModelsResponse>(await fetch('/api/models'))
+  const sel = resolveSelection(list)
+  if (sel) setCurrentModel(list, sel)
+  return list
+}
+
+/** POST to a model-backed endpoint; attaches the chosen model and failover chain. */
+export async function post<T>(path: string, body: Record<string, unknown>): Promise<T & { modelUsed?: Sel }> {
+  if (!current) throw new Error('No model selected yet. Check your API keys.')
+  return json(await fetch(`/api/${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...body, model: current.model, fallbacks: current.fallbacks }),
+  }))
+}
+
+export interface Improvement { corrected: string; improved: string; why: string[]; accentTips: string[] }
+export const improve = (text: string) => post<Improvement>('improve', { text })
