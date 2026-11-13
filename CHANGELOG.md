@@ -1,6 +1,11 @@
 # Changelog
 Append newest first. Format: date — what/why — files — tests.
 
+## 2026-11-13 — Fix: Vercel backend build failed ("No entrypoint found in output directory: public")
+- Why: Vercel auto-detected `express` and applied its Express preset, which expects an entry file in the output directory instead of our static `public/` + `api/` function setup.
+- Fix: `"framework": null` in `server/vercel.json` to opt out of detection. If it ever recurs, set Framework Preset to "Other" in the project's Build & Output settings.
+- Tests: new assertion in `server/tests/vercel-config.test.ts` (failed first). Server 42, web 21.
+
 ## 2026-11-13 — Two Vercel projects (backend `server/`, frontend `web/`)
 - Why: user wants backend and frontend deployed separately, both on Vercel.
 - Added `server/vercel.json`, `server/api/index.mjs`, `server/public/.gitkeep` (backend project, Root Directory = `server`). Frontend project uses Root Directory = `web` with `VITE_API_URL`. Root `vercel.json` + `api/` remain for the single-project option.
