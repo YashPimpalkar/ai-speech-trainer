@@ -1,16 +1,17 @@
 import { z } from 'zod'
 import type { Llm } from '../types.js'
+import { looseText as t } from '../json.js'
 import { askJson, JSON_ONLY, Annotation, StateGraph, START, END } from './util.js'
 
 const TenseSchema = z.object({
-  title: z.string(), rule: z.string(), structure: z.string(),
-  examples: z.array(z.object({ sentence: z.string(), note: z.string().default('') })),
-  quiz: z.array(z.object({ q: z.string(), a: z.string() })).default([]),
+  title: t, rule: t, structure: t,
+  examples: z.array(z.object({ sentence: t, note: t.default('') })),
+  quiz: z.array(z.object({ q: t, a: t })).default([]),
 })
 const VoiceSchema = z.object({
-  direction: z.string(), original: z.string(), converted: z.string(),
-  steps: z.array(z.string()).default([]),
-  examples: z.array(z.object({ active: z.string(), passive: z.string() })).default([]),
+  direction: t, original: t, converted: t,
+  steps: z.array(t).default([]),
+  examples: z.array(z.object({ active: t, passive: t })).default([]),
 })
 
 export type GrammarInput =

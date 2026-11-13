@@ -60,6 +60,14 @@ describe('agents', () => {
     expect((voice as any).converted).toContain('was eaten')
   })
 
+  it('grammar tolerates structured values where text is expected', async () => {
+    const out: any = await runGrammar(fake('{"title":"All Tenses","rule":["Simple: base verb","Perfect: have + V3"],"structure":{"simple present":"S + V1","simple past":"S + V2"},"examples":[{"sentence":"I eat.","note":null}],"quiz":[{"q":"She ___ (go)","a":{"answer":"goes"}}]}'), { mode: 'tense', tense: 'all' })
+    expect(typeof out.structure).toBe('string')
+    expect(out.structure).toContain('simple present: S + V1')
+    expect(out.rule).toContain('Perfect: have + V3')
+    expect(out.examples[0].note).toBe('')
+  })
+
   it('essay retries until near 500 words', async () => {
     const short = Array(100).fill('word').join(' ')
     const good = Array(500).fill('word').join(' ')

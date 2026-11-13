@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { improve, type Improvement } from '../lib/api'
+import { useAppDispatch } from '../store'
+import { saveItem } from '../store/historySlice'
 import { speak, stopSpeaking } from '../lib/speech'
 import { useRun } from '../lib/useRun'
 import { Button, ErrorMsg } from './ui'
@@ -7,8 +9,14 @@ import { Button, ErrorMsg } from './ui'
 /** "Improve my English" — drop it next to any user text, in any feature, at any point. */
 export default function Improve({ text, label = 'Improve my English' }: { text: string; label?: string }) {
   const [out, setOut] = useState<Improvement | null>(null)
+  const dispatch = useAppDispatch()
   const { loading, error, run } = useRun()
-  const go = async () => { const r = await run(() => improve(text)); if (r) setOut(r) }
+  const go = async () => {
+    const r = await run(() => improve(text))
+    if (!r) return
+    setOut(r)
+    void dispatch(saveItem({ kind: 'improve', title: text.slice(0, 80), payload: { input: text, output: r } }))
+  }
 
   return (
     <div className="mt-2">

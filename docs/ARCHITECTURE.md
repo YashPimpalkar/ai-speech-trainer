@@ -15,3 +15,7 @@ Routes: `GET /api/models`, `POST /api/{chat,coach,improve,grammar,essay,email,st
 
 Web: `lib/api.ts` holds the current model + failover chain; `lib/speech.ts` (Recorder, speak with Gemini→browser fallback); pages in `pages/`; shared `components/Improve.tsx`.
 Gotcha: LangGraph node names must differ from state keys (hence `rewriteStep`, `draftStep`).
+
+## History + state
+- Server: `history.ts` (`HistoryStore`: `pgStore` for Neon via `DATABASE_URL`, `memoryStore` fallback/tests); routes `GET/POST /api/history`, `GET/PUT/DELETE /api/history/:id`. Kinds: converse, improve, grammar, essay, email. Table `history_items(id uuid, kind, title, payload jsonb, created_at, updated_at)` is created at startup. `channel_binding` is stripped from the URL (unsupported by `pg`).
+- Web: Redux Toolkit in `web/src/store` (`converseSlice`, `historySlice`, `resultsSlice`). `saveConverse` serializes saves (create once, then PUT). Saving failures are swallowed so they never block the UI. No auth yet: history is global.

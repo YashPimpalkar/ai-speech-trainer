@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { post } from '../lib/api'
+import { useAppDispatch, useAppSelector } from '../store'
+import { saveItem } from '../store/historySlice'
+import { setResult } from '../store/resultsSlice'
 import { useRun } from '../lib/useRun'
 import Improve from '../components/Improve'
 import Listen from '../components/Listen'
@@ -18,13 +21,17 @@ export default function Grammar() {
   const [direction, setDirection] = useState<'active-to-passive' | 'passive-to-active'>('active-to-passive')
   const [sentence, setSentence] = useState('')
   const [practice, setPractice] = useState('')
-  const [out, setOut] = useState<any>(null)
+  const dispatch = useAppDispatch()
+  const out = useAppSelector((st) => st.results.grammar) ?? null
+  const setOut = (value: unknown) => dispatch(setResult({ page: 'grammar', value }))
   const { loading, error, run } = useRun()
 
   const go = async () => {
     const body = mode === 'tense' ? { mode, tense: tense.startsWith('all') ? 'all' : tense } : { mode, direction, sentence }
     const r = await run(() => post<any>('grammar', body))
-    if (r) setOut(r)
+    if (!r) return
+    setOut(r)
+    void dispatch(saveItem({ kind: 'grammar', title: mode === 'tense' ? tense : sentence, payload: { input: body, output: r } }))
   }
 
   return (
@@ -62,8 +69,8 @@ export default function Grammar() {
       {out && mode === 'tense' && (
         <Card className="space-y-4 text-sm">
           <h3 className="text-lg font-semibold">{out.title}</h3>
-          <p>{out.rule}</p>
-          <p className="rounded-lg bg-black/5 p-3 font-mono dark:bg-white/10">{out.structure}</p>
+          <p className="whitespace-pre-wrap">{out.rule}</p>
+          <p className="whitespace-pre-wrap rounded-lg bg-black/5 p-3 font-mono dark:bg-white/10">{out.structure}</p>
           <ul className="space-y-1">{out.examples?.map((e: any, i: number) => <li key={i}>• <b>{e.sentence}</b> <span className="text-zinc-500">{e.note}</span></li>)}</ul>
           <Listen text={(out.examples ?? []).map((e: any) => e.sentence).join(' ')} />
           {out.quiz?.length > 0 && (

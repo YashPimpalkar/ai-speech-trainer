@@ -29,3 +29,18 @@ export async function post<T>(path: string, body: Record<string, unknown>): Prom
 
 export interface Improvement { corrected: string; improved: string; why: string[]; accentTips: string[] }
 export const improve = (text: string) => post<Improvement>('improve', { text })
+
+// ---- history (stored server-side in Postgres) ----
+export type Kind = 'converse' | 'improve' | 'grammar' | 'essay' | 'email'
+export interface HistoryItem { id: string; kind: Kind; title: string; payload: any; createdAt: string; updatedAt: string }
+
+export const listHistory = async (kind?: Kind) =>
+  (await json<{ items: HistoryItem[] }>(await fetch(`/api/history${kind ? `?kind=${kind}` : ''}`))).items
+export const createHistory = async (kind: Kind, title: string, payload: unknown) =>
+  json<HistoryItem>(await fetch('/api/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind, title, payload }) }))
+export const updateHistory = async (id: string, patch: { title?: string; payload?: unknown }) =>
+  json<HistoryItem>(await fetch(`/api/history/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) }))
+export const deleteHistory = async (id: string) => {
+  const res = await fetch(`/api/history/${id}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error(`Delete failed (${res.status})`)
+}

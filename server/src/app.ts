@@ -11,12 +11,14 @@ import { runCoach } from './agents/coach.js'
 import { runGrammar } from './agents/grammar.js'
 import { runEssay } from './agents/essay.js'
 import { runEmail } from './agents/email.js'
+import { KINDS, type HistoryStore } from './history.js'
 
 export interface Deps {
   listModels: () => Promise<ModelList>
   makeLlm: (candidates: ModelSelection[], temperature?: number) => Llm
   stt: (audio: Buffer, filename: string, mime: string) => Promise<string>
   tts: (text: string, voice: VoiceKind) => Promise<Buffer | null>
+  history: HistoryStore
 }
 
 const Sel = z.object({ provider: z.enum(['groq', 'gemini']), model: z.string().min(1) })
@@ -80,6 +82,38 @@ export function createApp(deps: Deps) {
     if (!audio) return void res.status(501).json({ fallback: true, error: 'Server TTS unavailable; use browser voice' })
     res.type('audio/wav').send(audio)
   })
+
+  // ---- history (persisted in Postgres; in-memory fallback without DATABASE_URL) ----
+  const Id = z.string().uuid()
+  const guard = (fn: (req: Request, res: Response) => Promise<unknown>) => async (req: Request, res: Response) => {
+    try { await fn(req, res) } catch (e) { res.status(500).json({ error: (e as Error).message }) }
+  }
+  app.get('/api/history', guard(async (req, res) => {
+    const kind = z.enum(KINDS).optional().safeParse(req.query.kind)
+    if (!kind.success) return void res.status(400).json({ error: 'invalid kind' })
+    const limit = Math.min(Number(req.query.limit) || 100, 500)
+    res.json({ items: await deps.history.list(kind.data, limit) })
+  }))
+  app.get('/api/history/:id', guard(async (req, res) => {
+    if (!Id.safeParse(String(req.params.id)).success) return void res.status(404).json({ error: 'not found' })
+    const item = await deps.history.get(String(req.params.id))
+    item ? res.json(item) : res.status(404).json({ error: 'not found' })
+  }))
+  app.post('/api/history', guard(async (req, res) => {
+    const p = z.object({ kind: z.enum(KINDS), title: z.string().min(1).max(200), payload: z.unknown().default({}) }).safeParse(req.body)
+    if (!p.success) return void res.status(400).json({ error: p.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ') })
+    res.status(201).json(await deps.history.create(p.data.kind, p.data.title, p.data.payload))
+  }))
+  app.put('/api/history/:id', guard(async (req, res) => {
+    const p = z.object({ title: z.string().min(1).max(200).optional(), payload: z.unknown().optional() }).safeParse(req.body)
+    if (!p.success || !Id.safeParse(String(req.params.id)).success) return void res.status(400).json({ error: 'invalid request' })
+    const item = await deps.history.update(String(req.params.id), p.data)
+    item ? res.json(item) : res.status(404).json({ error: 'not found' })
+  }))
+  app.delete('/api/history/:id', guard(async (req, res) => {
+    if (!Id.safeParse(String(req.params.id)).success) return void res.status(404).json({ error: 'not found' })
+    ;(await deps.history.remove(String(req.params.id))) ? res.status(204).end() : res.status(404).json({ error: 'not found' })
+  }))
 
   return app
 }
