@@ -25,9 +25,12 @@ const Sel = z.object({ provider: z.enum(['groq', 'gemini']), model: z.string().m
 const Base = z.object({ model: Sel, fallbacks: z.array(Sel).default([]) })
 const Msgs = z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string() })).min(1)
 
-export function createApp(deps: Deps) {
+export interface AppOptions { corsOrigins?: string[] }
+
+export function createApp(deps: Deps, opts: AppOptions = {}) {
   const app = express()
-  app.use(cors())
+  // With CORS_ORIGINS set (production), only those sites may call the API; otherwise open for local dev.
+  app.use(cors(opts.corsOrigins?.length ? { origin: opts.corsOrigins } : undefined))
   app.use(express.json({ limit: '1mb' }))
   const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } })
 

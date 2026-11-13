@@ -103,3 +103,16 @@ export async function pgStore(connectionString: string): Promise<HistoryStore> {
     },
   }
 }
+
+/** Defers connecting until first use (serverless cold starts) and retries if the first attempt failed. */
+export function lazyStore(init: () => Promise<HistoryStore>): HistoryStore {
+  let ready: Promise<HistoryStore> | undefined
+  const get = () => (ready ??= init().catch((e) => { ready = undefined; throw e }))
+  return {
+    list: (...a) => get().then((s) => s.list(...a)),
+    get: (...a) => get().then((s) => s.get(...a)),
+    create: (...a) => get().then((s) => s.create(...a)),
+    update: (...a) => get().then((s) => s.update(...a)),
+    remove: (...a) => get().then((s) => s.remove(...a)),
+  }
+}

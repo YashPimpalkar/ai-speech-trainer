@@ -1,3 +1,5 @@
+import { apiUrl } from './apiUrl'
+
 export type Voice = 'female' | 'male'
 
 let audioEl: HTMLAudioElement | null = null
@@ -39,7 +41,7 @@ function browserSpeak(text: string, kind: Voice): Promise<void> {
 export async function speak(text: string, kind: Voice, fetchImpl: typeof fetch = fetch): Promise<void> {
   stopSpeaking()
   try {
-    const res = await fetchImpl('/api/tts', {
+    const res = await fetchImpl(apiUrl('/api/tts'), {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text, voice: kind }),
     })
@@ -83,7 +85,7 @@ export class Recorder {
 export async function transcribe(blob: Blob): Promise<string> {
   const form = new FormData()
   form.append('audio', blob, 'speech.webm')
-  const res = await fetch('/api/stt', { method: 'POST', body: form })
+  const res = await fetch(apiUrl('/api/stt'), { method: 'POST', body: form })
   const body = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(body.error ?? 'Could not transcribe audio')
   return body.text as string
