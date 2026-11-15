@@ -4,7 +4,7 @@ English speaking trainer. Vite + React 19 + Tailwind v4 (classes inline) in `web
 Models: any Groq or Gemini chat model via LangChain.js; agents are LangGraph graphs. Read `docs/ARCHITECTURE.md` first.
 
 ## Rules for every change
-1. **Tests first.** Write/adjust a failing test (`server/tests`, `web/src/lib/app.test.tsx`), then implement. Run `npm test` before AND after.
+1. **Tests first.** Write/adjust a failing test (`server/tests`, `web/src/lib/app.test.tsx`), then implement. Run `npm test` before AND after. `npm test` does NOT typecheck, so before every push also run `npm run build` (web `tsc -b` rejects things vitest accepts, e.g. Node imports in web tests; Vercel runs that build).
 2. **Log it.** Append a dated entry to `CHANGELOG.md` (what, why, files, tests) for every change.
 3. **Never commit secrets.** Keys live only in `server/.env` (gitignored). `.env.example` has placeholders. Never echo keys in docs/chat/logs.
 4. Don't hardcode model names; models are discovered live (`server/src/models/registry.ts`). TTS/STT defaults are env-overridable (`config.ts`).

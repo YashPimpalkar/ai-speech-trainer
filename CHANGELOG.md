@@ -5,6 +5,7 @@ Append newest first. Format: date — what/why — files — tests.
 - Why: the file (added in 8a7c91e) was a copy of the root single-project config: `functions` pointed at a non-existent `api/index.mjs` (Vercel error `unused_function`) and `outputDirectory: web/dist` is wrong when Root Directory is already `web`.
 - Fix: `web/vercel.json` now only sets `buildCommand: npm run build` and `outputDirectory: dist`.
 - Tests: new `web/src/lib/vercelConfig.test.ts` (failed first). Server 42, web 24.
+- Follow-up fix: the new test imported `node:fs`/`node:path`, which broke `tsc -b` in the Vercel build (web has no Node types). Rewritten with Vite `?raw` import. Verified with full `npm run build` in `web` and all tests. Added a CLAUDE.md rule: run `npm run build` before pushing, since vitest does not typecheck.
 - Git: all commits are authored as Yash Pimpalkar (history rewritten 2026-11-15).
 
 ## 2026-11-13 — Fix: Vercel backend build failed ("No entrypoint found in output directory: public")

@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+// `?raw` is handled by Vite (typed by vite/client), so no Node types are needed in the web build.
+import raw from '../../vercel.json?raw'
 
 // Frontend Vercel project uses Root Directory = web, so paths here are relative to web/.
-const cfg = JSON.parse(readFileSync(resolve(__dirname, '../../vercel.json'), 'utf8'))
+const cfg = JSON.parse(raw)
 
 describe('frontend vercel.json (Root Directory = web)', () => {
   it('outputs to dist relative to web, not web/dist', () => {
