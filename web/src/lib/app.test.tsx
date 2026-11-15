@@ -15,6 +15,7 @@ import Improve from '../components/Improve'
 import ModelPicker from '../components/ModelPicker'
 import { Field } from '../components/ui'
 import { fetchModels } from './api'
+import { modelScore, sortModels } from './models'
 
 const render = (ui: React.ReactElement, store = makeStore()) => rtlRender(<Provider store={store}>{ui}</Provider>)
 
@@ -203,5 +204,52 @@ describe('responsive layout', () => {
     const grid = container.querySelector('.grid')!
     expect(grid.className).toMatch(/grid-cols-1/)
     expect(grid.className).toMatch(/sm:grid-cols-3/)
+  })
+})
+
+describe('native dropdown popups are readable in both modes', () => {
+  // Browsers don't always follow color-scheme, so every <option>/<optgroup> carries its own colours.
+  const readable = (el: Element) => {
+    expect(el.className).toMatch(/\bbg-white\b/)
+    expect(el.className).toMatch(/\btext-black\b/)
+    expect(el.className).toMatch(/dark:bg-black/)
+    expect(el.className).toMatch(/dark:text-white/)
+  }
+  it('model picker options and group labels', async () => {
+    globalThis.fetch = vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ models: [{ provider: 'groq', id: 'm1' }], providers: { groq: true, gemini: false }, errors: {} }) })) as any
+    const { container } = render(<ModelPicker />)
+    await waitFor(() => expect(screen.getByRole('option', { name: 'm1' })).toBeInTheDocument())
+    readable(screen.getByRole('option', { name: 'm1' }))
+    readable(container.querySelector('optgroup')!)
+  })
+  it('grammar tense options', () => {
+    render(<Grammar />)
+    readable(screen.getByRole('option', { name: 'simple present' }))
+  })
+  it('email recipient options', () => {
+    render(<Email />)
+    readable(screen.getByRole('option', { name: 'boss' }))
+  })
+})
+
+describe('model ranking (best first, no hardcoded model names)', () => {
+  it('scores bigger parameter counts higher', () => {
+    expect(modelScore('openai/gpt-oss-120b')).toBeGreaterThan(modelScore('llama-3.3-70b-versatile'))
+    expect(modelScore('llama-3.3-70b-versatile')).toBeGreaterThan(modelScore('qwen/qwen3.8-27b'))
+    expect(modelScore('openai/gpt-oss-20b')).toBeGreaterThan(modelScore('allam-2-7b'))
+  })
+  it('ranks gemini pro > flash > flash-lite', () => {
+    expect(modelScore('gemini-2.5-pro')).toBeGreaterThan(modelScore('gemini-2.5-flash'))
+    expect(modelScore('gemini-2.5-flash')).toBeGreaterThan(modelScore('gemini-2.5-flash-lite'))
+  })
+  it('sorts strongest first and keeps unknown models in provider order', () => {
+    const ids = ['allam-2-7b', 'openai/gpt-oss-20b', 'mystery-a', 'openai/gpt-oss-120b', 'mystery-b']
+    const sorted = sortModels(ids.map((id) => ({ provider: 'groq' as const, id }))).map((m) => m.id)
+    expect(sorted).toEqual(['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'allam-2-7b', 'mystery-a', 'mystery-b'])
+  })
+  it('defaults to the strongest model when nothing valid is saved', () => {
+    localStorage.clear()
+    const list = { models: [{ provider: 'groq', id: 'allam-2-7b' }, { provider: 'groq', id: 'openai/gpt-oss-120b' }] as any, providers: {}, errors: {} }
+    expect(resolveSelection(list)).toEqual({ provider: 'groq', model: 'openai/gpt-oss-120b' })
   })
 })

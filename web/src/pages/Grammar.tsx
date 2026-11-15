@@ -6,7 +6,7 @@ import { setResult } from '../store/resultsSlice'
 import { useRun } from '../lib/useRun'
 import Improve from '../components/Improve'
 import Listen from '../components/Listen'
-import { Button, Card, ErrorMsg, Field, Label } from '../components/ui'
+import { Button, Card, ErrorMsg, Field, Label, optionCls } from '../components/ui'
 
 export const TENSES = [
   'all tenses overview',
@@ -48,14 +48,14 @@ export default function Grammar() {
         {mode === 'tense' ? (
           <label><Label>Tense</Label>
             <select className={Field} value={tense} onChange={(e) => setTense(e.target.value)}>
-              {TENSES.map((t) => <option key={t}>{t}</option>)}
+              {TENSES.map((t) => <option key={t} className={optionCls}>{t}</option>)}
             </select></label>
         ) : (
           <>
             <label><Label>Direction</Label>
               <select className={Field} value={direction} onChange={(e) => setDirection(e.target.value as typeof direction)}>
-                <option value="active-to-passive">Active → Passive</option>
-                <option value="passive-to-active">Passive → Active</option>
+                <option value="active-to-passive" className={optionCls}>Active → Passive</option>
+                <option value="passive-to-active" className={optionCls}>Passive → Active</option>
               </select></label>
             <label><Label>Sentence</Label>
               <textarea className={Field} rows={2} value={sentence} onChange={(e) => setSentence(e.target.value)} placeholder="Tom ate the cake." /></label>

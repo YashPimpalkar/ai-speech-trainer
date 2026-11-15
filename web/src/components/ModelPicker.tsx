@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchModels, setCurrentModel } from '../lib/api'
-import { resolveSelection, setSelection, type ModelsResponse, type Sel } from '../lib/models'
+import { resolveSelection, setSelection, sortModels, type ModelsResponse, type Sel } from '../lib/models'
+import { optionCls } from './ui'
 
 export default function ModelPicker() {
   const [list, setList] = useState<ModelsResponse | null>(null)
@@ -34,13 +35,13 @@ export default function ModelPicker() {
         // Opaque background: the native dropdown popup takes it, so options stay readable in both modes.
         className="min-w-0 flex-1 rounded-full border border-black/30 bg-white px-3 py-1.5 text-base text-black disabled:opacity-60 dark:border-white/30 dark:bg-black dark:text-white sm:max-w-xs sm:flex-none sm:text-xs"
       >
-        {status === 'loading' && <option value="">Loading models…</option>}
-        {status === 'error' && <option value="">Models unavailable</option>}
+        {status === 'loading' && <option value="" className={optionCls}>Loading models…</option>}
+        {status === 'error' && <option value="" className={optionCls}>Models unavailable</option>}
         {status === 'ok' && (['groq', 'gemini'] as const).map((p) => {
-          const items = list?.models.filter((m) => m.provider === p) ?? []
+          const items = sortModels(list?.models.filter((m) => m.provider === p) ?? [])
           return items.length ? (
-            <optgroup key={p} label={p.toUpperCase()}>
-              {items.map((m) => <option key={m.id} value={`${p}::${m.id}`}>{m.id}</option>)}
+            <optgroup key={p} label={p.toUpperCase()} className={optionCls}>
+              {items.map((m) => <option key={m.id} value={`${p}::${m.id}`} className={optionCls}>{m.id}</option>)}
             </optgroup>
           ) : null
         })}

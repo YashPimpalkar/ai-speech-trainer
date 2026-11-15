@@ -1,6 +1,12 @@
 # Changelog
 Append newest first. Format: date — what/why — files — tests.
 
+## 2026-11-15 — Dropdown popups readable + models ranked best-first
+- Why: on the deployed site every native dropdown option (model, tense, email) was white text on a white popup (only the hovered row showed); the default model could be a weak 7B model.
+- Fix: each `<option>`/`<optgroup>` carries its own colours (`optionCls`: white/black, dark: black/white) since browsers don't reliably follow `color-scheme`. Models are sorted strongest first by a generic id-based score (`modelScore`: parameter count, Gemini pro > flash, lite/mini/nano halved; no hardcoded model names) and the default is the top-ranked one; failover list is also best-first.
+- Files: web/src/lib/models.ts, components/{ModelPicker,ui}.tsx, pages/{Grammar,Email}.tsx, lib/app.test.tsx.
+- Verified in the browser: option colours in both modes, default `openai/gpt-oss-120b`. Tests: web 37, server 42.
+
 ## 2026-11-15 — Responsive layout (phone/tablet/desktop) + model dropdown + clearer API errors
 - Why: UI wasn't built for small screens; the model dropdown heading rendered blank (white text on the popup's white background) and a failed model list showed a bare "Request failed (404)".
 - UI: header stacks on phones (picker full width), tabs scroll without a scrollbar, 16px inputs on phones (no iOS zoom), 40px touch targets, Email selects stack, History rows stack, composer respects the safe area; `viewport-fit=cover`; `color-scheme` follows the theme so native popups match.

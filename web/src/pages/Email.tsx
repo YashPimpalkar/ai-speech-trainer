@@ -6,7 +6,7 @@ import { setResult } from '../store/resultsSlice'
 import { useRun } from '../lib/useRun'
 import Improve from '../components/Improve'
 import Listen from '../components/Listen'
-import { Button, Card, ErrorMsg, Field, Label } from '../components/ui'
+import { Button, Card, ErrorMsg, Field, Label, optionCls } from '../components/ui'
 
 const RECIPIENTS = ['boss', 'client', 'HR', 'vendor', 'colleague', 'team']
 const TONES = ['formal', 'friendly', 'firm', 'apologetic', 'persuasive']
@@ -31,7 +31,7 @@ export default function Email() {
   }
   const full = out ? `Subject: ${out.subject}\n\n${out.body}` : ''
   const sel = (v: string, set: (s: string) => void, opts: string[]) => (
-    <select className={Field} value={v} onChange={(e) => set(e.target.value)}>{opts.map((o) => <option key={o}>{o}</option>)}</select>
+    <select className={Field} value={v} onChange={(e) => set(e.target.value)}>{opts.map((o) => <option key={o} className={optionCls}>{o}</option>)}</select>
   )
 
   return (

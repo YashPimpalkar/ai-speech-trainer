@@ -23,3 +23,6 @@ export const ErrorMsg = ({ text }: { text: string }) =>
 export const Label = ({ children }: { children: ReactNode }) => (
   <span className="mb-1 block text-xs uppercase tracking-widest text-zinc-500">{children}</span>
 )
+
+/** Colours for <option>/<optgroup>: native dropdown popups don't always follow the page theme. */
+export const optionCls = 'bg-white text-black dark:bg-black dark:text-white'
