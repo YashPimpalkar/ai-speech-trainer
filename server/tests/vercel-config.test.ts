@@ -17,6 +17,10 @@ describe('backend-only Vercel project (Root Directory = server)', () => {
     expect(existsSync(resolve(root, cfg.outputDirectory))).toBe(true)
   })
 
+  it('opts out of framework auto-detection (otherwise Vercel applies its Express preset and fails)', () => {
+    expect(cfg.framework).toBeNull()
+  })
+
   it('function entry re-exports the compiled handler', () => {
     expect(readFileSync(resolve(root, 'api/index.mjs'), 'utf8')).toContain('../dist/handler.js')
   })
