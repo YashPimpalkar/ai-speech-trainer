@@ -7,7 +7,9 @@ import { Recorder, speak, stopSpeaking, transcribe } from '../lib/speech'
 import { useRun } from '../lib/useRun'
 import Improve from '../components/Improve'
 import Listen from '../components/Listen'
-import { Button, Card, ErrorMsg } from '../components/ui'
+import { Badge, Button, Card, ErrorMsg, Label } from '../components/ui'
+
+const STARTERS = ['Talk about my weekend', 'Practise a job interview', 'Describe my city']
 
 export default function Converse() {
   const dispatch = useAppDispatch()
@@ -50,49 +52,74 @@ export default function Converse() {
     if (r) { dispatch(setReport(r)); void dispatch(saveConverse()); void speak(r.improvedVersion, 'male') }
   }
 
-  const empty = msgs.length === 0
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {/* Only this area scrolls; the input bar below stays pinned. */}
+      {/* Only this area scrolls; the composer below stays pinned. */}
       <div data-testid="messages" className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-2xl space-y-4 px-1 py-4">
-          {empty && (
-            <div className="grid min-h-[40vh] place-items-center text-center text-zinc-500">
-              <div><p className="text-2xl font-semibold text-black dark:text-white">Hi, I'm Aria.</p>
-                <p className="mt-1 text-sm">Tap the mic or type — any topic you like.</p></div>
+        <div className="mx-auto max-w-3xl space-y-5 px-3 py-6 sm:px-6">
+          {msgs.length === 0 && (
+            <div className="grid min-h-[40vh] place-items-center text-center">
+              <div>
+                <p className="text-4xl font-semibold tracking-tight">Hi, I'm Aria.</p>
+                <p className="mt-2 text-sm text-neutral-500">Tap the mic or type — any topic you like.</p>
+                <div className="mt-5 flex flex-wrap justify-center gap-2">
+                  {STARTERS.map((s) => (
+                    <button key={s} onClick={() => setDraft(s)} className="cursor-pointer rounded-full border border-black/15 px-3.5 py-1.5 text-xs text-neutral-600 hover:bg-black/5 dark:border-white/20 dark:text-neutral-300 dark:hover:bg-white/10">✦ {s}</button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
-          {msgs.map((m, i) => (
-            <div key={i} className={m.role === 'user' ? 'text-right' : ''}>
-              <div className={`inline-block max-w-[85%] rounded-2xl px-4 py-2 text-left text-sm ${m.role === 'user' ? 'bg-black text-white dark:bg-white dark:text-black' : 'border border-black/20 dark:border-white/20'}`}>
-                <span className="mb-0.5 block text-[10px] uppercase tracking-widest opacity-60">{m.role === 'user' ? 'You' : 'Aria'}</span>
-                {m.content}
+
+          {msgs.map((m, i) =>
+            m.role === 'assistant' ? (
+              <div key={i} className="flex items-start gap-3">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-black/15 font-mono text-[11px] dark:border-white/20">AR</span>
+                <div className="min-w-0 max-w-[85%] rounded-2xl border border-black/10 bg-neutral-50 px-4 py-2.5 text-left text-sm leading-relaxed dark:border-white/10 dark:bg-neutral-900">
+                  <span className="mb-0.5 block font-mono text-[10px] uppercase tracking-widest text-neutral-500">Aria</span>
+                  {m.content}
+                </div>
               </div>
-              {m.role === 'user' && <div className="text-right"><Improve text={m.content} label="Improve this" /></div>}
-            </div>
-          ))}
-          {loading && <p className="text-xs text-zinc-500">Aria is typing…</p>}
+            ) : (
+              <div key={i} className="text-right">
+                <div className="inline-block max-w-[85%] rounded-2xl bg-black px-4 py-2.5 text-left text-sm leading-relaxed text-white dark:bg-neutral-800">
+                  <span className="mb-0.5 block font-mono text-[10px] uppercase tracking-widest opacity-60">You</span>
+                  {m.content}
+                </div>
+                <div className="text-right"><Improve text={m.content} label="Improve this" /></div>
+              </div>
+            ),
+          )}
+          {loading && <p className="pl-11 font-mono text-xs text-neutral-500">Aria is typing…</p>}
 
           {report && (
             <Card className="space-y-4 text-left text-sm">
-              <div className="flex items-baseline justify-between"><h3 className="text-lg font-semibold">Coach review</h3><span className="text-2xl font-bold">{report.score}/100</span></div>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2"><h3 className="text-lg font-semibold">Coach review</h3><Badge>Session</Badge></div>
+                <span className="text-3xl font-semibold tracking-tight">{report.score}<span className="text-base text-neutral-500">/100</span></span>
+              </div>
               {report.errors.length > 0 && (
-                <ul className="space-y-2">
-                  {report.errors.map((e, i) => (
-                    <li key={i} className="rounded-lg border border-black/15 p-3 dark:border-white/15">
-                      <s className="opacity-60">{e.original}</s> → <b>{e.corrected}</b>
-                      <div className="text-xs text-zinc-500">{e.rule}</div>
-                    </li>
-                  ))}
-                </ul>
+                <div>
+                  <Label>Mistakes</Label>
+                  <ul className="space-y-2">
+                    {report.errors.map((e, i) => (
+                      <li key={i} className="rounded-xl border border-black/10 p-3 dark:border-white/10">
+                        <s className="opacity-60">{e.original}</s> → <b>{e.corrected}</b>
+                        <div className="font-mono text-[11px] text-neutral-500">{e.rule}</div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
               <div>
-                <span className="text-xs uppercase tracking-widest text-zinc-500">Improved version (male voice)</span>
-                <p className="mt-1 font-medium">{report.improvedVersion}</p>
-                <div className="mt-2"><Listen text={report.improvedVersion} /></div>
+                <Label>Polished native phrasing</Label>
+                <p className="rounded-xl border border-black/10 p-3 font-medium dark:border-white/10">{report.improvedVersion}</p>
+                <div className="mt-2 flex items-center gap-2"><Listen text={report.improvedVersion} /><span className="font-mono text-[11px] text-neutral-500">male coach voice</span></div>
               </div>
-              {report.tips.length > 0 && <ul className="list-disc pl-5">{report.tips.map((t, i) => <li key={i}>{t}</li>)}</ul>}
-              {report.accentTips.length > 0 && <div><span className="text-xs uppercase tracking-widest text-zinc-500">Accent tips</span><ul className="list-disc pl-5">{report.accentTips.map((t, i) => <li key={i}>{t}</li>)}</ul></div>}
+              <div className="grid gap-3 sm:grid-cols-2">
+                {report.tips.length > 0 && <div className="rounded-xl border border-black/10 p-3 dark:border-white/10"><Label>Tips</Label><ul className="list-disc pl-4">{report.tips.map((t, i) => <li key={i}>{t}</li>)}</ul></div>}
+                {report.accentTips.length > 0 && <div className="rounded-xl border border-black/10 p-3 dark:border-white/10"><Label>Accent tips</Label><ul className="list-disc pl-4">{report.accentTips.map((t, i) => <li key={i}>{t}</li>)}</ul></div>}
+              </div>
             </Card>
           )}
           <div ref={bottom} />
@@ -100,16 +127,16 @@ export default function Converse() {
       </div>
 
       {/* Pinned composer */}
-      <div className="shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">
-        <div className="mx-auto max-w-2xl">
+      <div className="shrink-0 px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 sm:px-6">
+        <div className="mx-auto max-w-3xl">
           <ErrorMsg text={error} />
-          <div className="flex items-center gap-2 rounded-full border border-black/25 p-1.5 pl-2 dark:border-white/25">
+          <div className="flex items-center gap-2 rounded-full border border-black/15 bg-white p-1.5 pl-2 shadow-sm focus-within:border-blue-500 dark:border-white/20 dark:bg-neutral-900 dark:focus-within:border-blue-400">
             <button
               aria-label={recording ? 'Stop recording' : 'Start recording'}
               onClick={toggleMic}
-              className="relative grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-full bg-black text-white dark:bg-white dark:text-black"
+              className={`relative grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-full text-white ${recording ? 'bg-blue-500' : 'bg-black dark:bg-white dark:text-black'}`}
             >
-              {recording && <span className="pulse-ring absolute inset-0 rounded-full border-2 border-current" />}
+              {recording && <span className="pulse-ring absolute inset-0 rounded-full border-2 border-blue-400" />}
               {recording ? '■' : '🎤'}
             </button>
             <input

@@ -1,38 +1,35 @@
-import { useState } from 'react'
-import ModelPicker from './components/ModelPicker'
-import ThemeToggle from './components/ThemeToggle'
+import Sidebar from './components/Sidebar'
+import TopBar from './components/TopBar'
 import Converse from './pages/Converse'
 import Grammar from './pages/Grammar'
 import Essay from './pages/Essay'
 import Email from './pages/Email'
-import History from './pages/History'
-
-const TABS = [
-  { id: 'converse', label: 'Converse', view: Converse },
-  { id: 'grammar', label: 'Grammar', view: Grammar },
-  { id: 'essay', label: 'Essay', view: Essay },
-  { id: 'email', label: 'Email', view: Email },
-  { id: 'history', label: 'History', view: History },
-] as const
+import SavedItem from './pages/SavedItem'
+import { useAppDispatch, useAppSelector } from './store'
+import { closeDrawer } from './store/uiSlice'
 
 export default function App() {
-  const [tab, setTab] = useState<(typeof TABS)[number]['id']>('converse')
+  const dispatch = useAppDispatch()
+  const { view, drawerOpen } = useAppSelector((s) => s.ui)
+  const isChat = view === 'converse'
+
   return (
-    <div className="mx-auto flex h-dvh max-w-4xl flex-col px-3 sm:px-6">
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 py-3 sm:py-5">
-        <h1 className="text-xl font-bold tracking-tight">Speak<span className="opacity-40">.</span>AI</h1>
-        <div className="order-3 w-full min-w-0 sm:order-2 sm:ml-auto sm:w-auto"><ModelPicker /></div>
-        <div className="order-2 sm:order-3"><ThemeToggle /></div>
-      </header>
-      <nav className="no-scrollbar mb-2 flex shrink-0 gap-1 overflow-x-auto border-b border-black/15 dark:border-white/15">
-        {TABS.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            className={`cursor-pointer whitespace-nowrap px-3 py-2 text-sm sm:px-4 ${tab === t.id ? 'border-b-2 border-black font-semibold dark:border-white' : 'text-zinc-500 hover:text-black dark:hover:text-white'}`}>
-            {t.label}
-          </button>
-        ))}
-      </nav>
-      <main className={`min-h-0 flex-1 ${tab === 'converse' ? 'flex flex-col' : 'overflow-y-auto pb-10 pt-4'}`}>{tab === 'converse' ? <Converse /> : tab === 'grammar' ? <Grammar /> : tab === 'essay' ? <Essay /> : tab === 'email' ? <Email /> : <History onContinue={() => setTab('converse')} />}</main>
+    <div className="flex h-dvh overflow-hidden bg-white text-black dark:bg-black dark:text-white">
+      <Sidebar />
+      {drawerOpen && <div data-testid="drawer-backdrop" onClick={() => dispatch(closeDrawer())} className="fixed inset-0 z-30 bg-black/50 lg:hidden" />}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <TopBar />
+        <main className={`min-h-0 flex-1 ${isChat ? 'flex flex-col' : 'overflow-y-auto'}`}>
+          {isChat ? <Converse /> : (
+            <div className="mx-auto w-full max-w-3xl px-3 pb-12 pt-6 sm:px-6">
+              {view === 'grammar' && <Grammar />}
+              {view === 'essay' && <Essay />}
+              {view === 'email' && <Email />}
+              {view === 'saved' && <SavedItem />}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   )
 }

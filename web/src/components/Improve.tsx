@@ -2,9 +2,17 @@ import { useState } from 'react'
 import { improve, type Improvement } from '../lib/api'
 import { useAppDispatch } from '../store'
 import { saveItem } from '../store/historySlice'
-import { speak, stopSpeaking } from '../lib/speech'
 import { useRun } from '../lib/useRun'
-import { Button, ErrorMsg } from './ui'
+import Listen from './Listen'
+import { Badge, Button, ErrorMsg, Label } from './ui'
+
+const Points = ({ title, items }: { title: string; items: string[] }) =>
+  items.length ? (
+    <div className="rounded-xl border border-black/10 p-3 dark:border-white/10">
+      <Label>{title}</Label>
+      <ul className="list-disc space-y-1 pl-4 text-neutral-700 dark:text-neutral-300">{items.map((w, i) => <li key={i}>{w}</li>)}</ul>
+    </div>
+  ) : null
 
 /** "Improve my English" — drop it next to any user text, in any feature, at any point. */
 export default function Improve({ text, label = 'Improve my English' }: { text: string; label?: string }) {
@@ -25,21 +33,18 @@ export default function Improve({ text, label = 'Improve my English' }: { text: 
       </Button>
       <ErrorMsg text={error} />
       {out && (
-        <div data-testid="improve-panel" className="mt-3 space-y-3 rounded-xl text-left border border-black/20 p-4 text-sm dark:border-white/20">
-          <div><span className="text-xs uppercase tracking-widest text-zinc-500">Corrected</span><p>{out.corrected}</p></div>
+        <div data-testid="improve-panel" className="mt-3 space-y-4 rounded-2xl border border-black/10 bg-neutral-50 p-4 text-left text-sm dark:border-white/15 dark:bg-neutral-900">
+          <div className="flex items-center justify-between gap-2"><span className="font-medium">✦ Coach insight</span><Badge>Grammar &amp; accent</Badge></div>
+          <div><Label>Corrected</Label><p>{out.corrected}</p></div>
           <div>
-            <span className="text-xs uppercase tracking-widest text-zinc-500">Improved (male coach)</span>
-            <p className="font-medium">{out.improved}</p>
-            <div className="mt-2 flex gap-2">
-              <Button variant="ghost" className="!py-1 !text-xs" onClick={() => speak(out.improved, 'male')}>▶ Listen</Button>
-              <Button variant="ghost" className="!py-1 !text-xs" onClick={stopSpeaking}>■ Stop</Button>
-            </div>
+            <Label>Polished native phrasing</Label>
+            <p className="rounded-xl border border-black/10 bg-white p-3 font-medium dark:border-white/10 dark:bg-black">{out.improved}</p>
+            <div className="mt-2 flex items-center gap-2"><Listen text={out.improved} /><span className="font-mono text-[11px] text-neutral-500">male coach voice</span></div>
           </div>
-          {out.why.length > 0 && <ul className="list-disc pl-5 text-zinc-600 dark:text-zinc-400">{out.why.map((w, i) => <li key={i}>{w}</li>)}</ul>}
-          {out.accentTips.length > 0 && (
-            <div><span className="text-xs uppercase tracking-widest text-zinc-500">Accent tips</span>
-              <ul className="list-disc pl-5">{out.accentTips.map((w, i) => <li key={i}>{w}</li>)}</ul></div>
-          )}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Points title="Why it changed" items={out.why} />
+            <Points title="Accent tips" items={out.accentTips} />
+          </div>
         </div>
       )}
     </div>

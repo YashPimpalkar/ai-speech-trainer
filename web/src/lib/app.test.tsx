@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render as rtlRender, screen, fireEvent, waitFor } from '@testing-library/react'
 import { Provider } from 'react-redux'
 import { makeStore } from '../store'
-import History from '../pages/History'
 import { applyTheme } from './theme'
 import { buildFallbacks, resolveSelection, setSelection } from './models'
 import { pickBrowserVoice, speak } from './speech'
@@ -127,38 +126,6 @@ describe('Converse chat layout', () => {
     fireEvent.click(screen.getByText('Send'))
     await screen.findByText('Hi!')
     expect(scroll).toHaveBeenCalled()
-  })
-})
-
-describe('History tab', () => {
-  const items = [
-    { id: '1', kind: 'converse', title: 'Cricket chat', createdAt: '2026-11-12T10:00:00Z', updatedAt: '', payload: { messages: [{ role: 'user', content: 'hi' }], report: null } },
-    { id: '2', kind: 'essay', title: 'umbrella', createdAt: '2026-11-12T11:00:00Z', updatedAt: '', payload: { output: { title: 'Umbrella', essay: 'An umbrella.' } } },
-  ]
-  it('lists saved items, continues a conversation, and deletes', async () => {
-    const f = vi.fn(async (_url: string, init?: RequestInit) => init?.method === 'DELETE'
-      ? ({ ok: true, status: 204, json: async () => ({}) } as Response)
-      : ({ ok: true, status: 200, json: async () => ({ items }) } as Response))
-    globalThis.fetch = f as any
-    const store = makeStore()
-    const onContinue = vi.fn()
-    render(<History onContinue={onContinue} />, store)
-    expect(await screen.findByText('Cricket chat')).toBeInTheDocument()
-    expect(screen.getByText('umbrella')).toBeInTheDocument()
-
-    fireEvent.click(screen.getByText('Continue chat'))
-    expect(store.getState().converse.historyId).toBe('1')
-    expect(store.getState().converse.messages[0].content).toBe('hi')
-    expect(onContinue).toHaveBeenCalled()
-
-    fireEvent.click(screen.getAllByText('Delete')[1])
-    await waitFor(() => expect(screen.queryByText('umbrella')).not.toBeInTheDocument())
-  })
-
-  it('shows an empty state', async () => {
-    globalThis.fetch = vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ items: [] }) })) as any
-    render(<History onContinue={() => {}} />)
-    expect(await screen.findByText(/Nothing here yet/)).toBeInTheDocument()
   })
 })
 

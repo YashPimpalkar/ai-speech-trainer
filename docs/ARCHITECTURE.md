@@ -19,3 +19,8 @@ Gotcha: LangGraph node names must differ from state keys (hence `rewriteStep`, `
 ## History + state
 - Server: `history.ts` (`HistoryStore`: `pgStore` for Neon via `DATABASE_URL`, `memoryStore` fallback/tests); routes `GET/POST /api/history`, `GET/PUT/DELETE /api/history/:id`. Kinds: converse, improve, grammar, essay, email. Table `history_items(id uuid, kind, title, payload jsonb, created_at, updated_at)` is created at startup. `channel_binding` is stripped from the URL (unsupported by `pg`).
 - Web: Redux Toolkit in `web/src/store` (`converseSlice`, `historySlice`, `resultsSlice`). `saveConverse` serializes saves (create once, then PUT). Saving failures are swallowed so they never block the UI. No auth yet: history is global.
+
+## UI shell (Stitch design)
+- `App.tsx` = sidebar + top bar + one centred column. `components/Sidebar.tsx` (nav, search, filter chips, history grouped Today/Yesterday/Previous 7 days/Older, delete, model picker), `components/TopBar.tsx` (menu button, title, black/white toggle), `pages/SavedItem.tsx` (opens a saved essay/email/lesson/improvement; "Continue in ..." puts its output back into `results`).
+- Redux `uiSlice`: `view` (converse | grammar | essay | email | saved), `savedId`, `drawerOpen` (mobile/tablet drawer, below `lg`), `collapsed` (desktop sidebar). History list is live: `saveItem`/`saveConverse` upsert into `history.items`.
+- Pure helpers in `lib/historyUtils.ts` (grouping, filtering, reading time). The old History tab was replaced by the sidebar.

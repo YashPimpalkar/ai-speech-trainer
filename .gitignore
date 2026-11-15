@@ -2,3 +2,6 @@ node_modules
 dist
 .env
 *.log
+
+# Stitch design export (reference only, kept local)
+design/

@@ -8,7 +8,7 @@ Models: any Groq or Gemini chat model via LangChain.js; agents are LangGraph gra
 2. **Log it.** Append a dated entry to `CHANGELOG.md` (what, why, files, tests) for every change.
 3. **Never commit secrets.** Keys live only in `server/.env` (gitignored). `.env.example` has placeholders. Never echo keys in docs/chat/logs.
 4. Don't hardcode model names; models are discovered live (`server/src/models/registry.ts`). TTS/STT defaults are env-overridable (`config.ts`).
-5. UI is black/white only, with a dark/light toggle (`dark:` variants). Every user-text feature must offer the shared `<Improve />` button.
+5. UI follows the Stitch design in `design/stitch` (local only, git-ignored): Black mode / White mode toggle (`dark:` variants), neutral greys plus ONE blue accent (`blue-500`) for the active nav item, mic/recording, focus and coach badges. Layout: left history sidebar (Redux `ui`/`history` slices), centred content column, drawer below `lg`. Inter + JetBrains Mono. Every user-text feature must offer the shared `<Improve />` button. Only build features that really work; no mock scores.
 
 ## Commands
 - `npm install` · `npm run dev` (API :8787 + web :5173) · `npm test` · `npm run build`

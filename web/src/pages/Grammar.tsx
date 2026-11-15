@@ -6,7 +6,7 @@ import { setResult } from '../store/resultsSlice'
 import { useRun } from '../lib/useRun'
 import Improve from '../components/Improve'
 import Listen from '../components/Listen'
-import { Button, Card, ErrorMsg, Field, Label, optionCls } from '../components/ui'
+import { Badge, Button, Card, ErrorMsg, Field, Label, PageHeader, optionCls } from '../components/ui'
 
 export const TENSES = [
   'all tenses overview',
@@ -35,8 +35,10 @@ export default function Grammar() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
-      <div className="flex flex-wrap gap-2">
+    <div>
+      <PageHeader title="Grammar Coach" subtitle="Learn any tense, or flip sentences between the two voices." />
+
+      <div className="mb-4 flex flex-wrap gap-2">
         {(['tense', 'voice'] as const).map((m) => (
           <Button key={m} variant={mode === m ? 'solid' : 'ghost'} onClick={() => { setMode(m); setOut(null) }}>
             {m === 'tense' ? 'Tenses' : 'Active ⇄ Passive'}
@@ -67,17 +69,20 @@ export default function Grammar() {
       </Card>
 
       {out && mode === 'tense' && (
-        <Card className="space-y-4 text-sm">
-          <h3 className="text-lg font-semibold">{out.title}</h3>
-          <p className="whitespace-pre-wrap">{out.rule}</p>
-          <p className="whitespace-pre-wrap rounded-lg bg-black/5 p-3 font-mono dark:bg-white/10">{out.structure}</p>
-          <ul className="space-y-1">{out.examples?.map((e: any, i: number) => <li key={i}>• <b>{e.sentence}</b> <span className="text-zinc-500">{e.note}</span></li>)}</ul>
-          <Listen text={(out.examples ?? []).map((e: any) => e.sentence).join(' ')} />
+        <Card className="mt-5 space-y-5 text-sm">
+          <div className="flex items-center justify-between gap-2"><h2 className="text-xl font-semibold tracking-tight">{out.title}</h2><Badge>Lesson</Badge></div>
+          <div><Label>Core rule</Label><p className="whitespace-pre-wrap leading-relaxed">{out.rule}</p></div>
+          <div><Label>Syntax structure</Label><p className="whitespace-pre-wrap rounded-xl border border-black/10 bg-neutral-50 p-3 font-mono text-xs dark:border-white/10 dark:bg-black">{out.structure}</p></div>
+          <div>
+            <Label>Examples</Label>
+            <ul className="space-y-1.5">{out.examples?.map((e: any, i: number) => <li key={i}>• <b>{e.sentence}</b> <span className="text-neutral-500">{e.note}</span></li>)}</ul>
+            <div className="mt-2"><Listen text={(out.examples ?? []).map((e: any) => e.sentence).join(' ')} /></div>
+          </div>
           {out.quiz?.length > 0 && (
-            <div><Label>Quiz</Label>
-              {out.quiz.map((q: any, i: number) => <details key={i} className="py-1"><summary className="cursor-pointer">{q.q}</summary><b>{q.a}</b></details>)}</div>
+            <div><Label>Checkpoint quiz</Label>
+              {out.quiz.map((q: any, i: number) => <details key={i} className="rounded-xl border border-black/10 px-3 py-2 dark:border-white/10 [&:not(:first-of-type)]:mt-2"><summary className="cursor-pointer">{q.q}</summary><b className="mt-1 block">{q.a}</b></details>)}</div>
           )}
-          <div className="border-t border-black/10 pt-3 dark:border-white/10">
+          <div className="border-t border-black/10 pt-4 dark:border-white/10">
             <Label>Practice: write your own sentence in this tense</Label>
             <textarea className={Field} rows={2} value={practice} onChange={(e) => setPractice(e.target.value)} />
             <Improve text={practice} />
@@ -86,12 +91,11 @@ export default function Grammar() {
       )}
 
       {out && mode === 'voice' && (
-        <Card className="space-y-3 text-sm">
-          <p className="text-zinc-500 line-through">{out.original}</p>
-          <p className="text-lg font-semibold">{out.converted}</p>
-          <Listen text={out.converted} />
-          <ol className="list-decimal pl-5">{out.steps?.map((s: string, i: number) => <li key={i}>{s}</li>)}</ol>
-          {out.examples?.map((e: any, i: number) => <p key={i}>{e.active} <span className="text-zinc-500">⇄</span> {e.passive}</p>)}
+        <Card className="mt-5 space-y-4 text-sm">
+          <div><Label>Original</Label><p className="text-neutral-500 line-through">{out.original}</p></div>
+          <div><Label>Converted</Label><p className="text-xl font-semibold tracking-tight">{out.converted}</p><div className="mt-2"><Listen text={out.converted} /></div></div>
+          {out.steps?.length > 0 && <div><Label>Steps</Label><ol className="list-decimal space-y-1 pl-5">{out.steps.map((s: string, i: number) => <li key={i}>{s}</li>)}</ol></div>}
+          {out.examples?.length > 0 && <div><Label>More examples</Label>{out.examples.map((e: any, i: number) => <p key={i}>{e.active} <span className="text-neutral-500">⇄</span> {e.passive}</p>)}</div>}
         </Card>
       )}
     </div>

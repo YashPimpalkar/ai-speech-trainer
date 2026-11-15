@@ -34,6 +34,12 @@ export const saveConverse = createAsyncThunk('history/saveConverse', (_: void, {
   return chain as Promise<HistoryItem | null>
 })
 
+function upsert(items: HistoryItem[], item: HistoryItem) {
+  const i = items.findIndex((x) => x.id === item.id)
+  if (i >= 0) items[i] = item
+  else items.unshift(item)
+}
+
 const slice = createSlice({
   name: 'history',
   initialState: { items: [], status: 'idle', error: '' } as State,
@@ -43,6 +49,9 @@ const slice = createSlice({
      .addCase(fetchHistory.fulfilled, (s, a) => { s.status = 'idle'; s.items = a.payload })
      .addCase(fetchHistory.rejected, (s, a) => { s.status = 'error'; s.error = a.error.message ?? 'Failed to load history' })
      .addCase(removeHistory.fulfilled, (s, a) => { s.items = s.items.filter((i) => i.id !== a.payload) })
+     // Keep the sidebar live: new items go on top, updated ones are replaced in place.
+     .addCase(saveItem.fulfilled, (s, a) => { if (a.payload) upsert(s.items, a.payload) })
+     .addCase(saveConverse.fulfilled, (s, a) => { if (a.payload) upsert(s.items, a.payload) })
   },
 })
 export default slice.reducer

@@ -1,6 +1,13 @@
 # Changelog
 Append newest first. Format: date — what/why — files — tests.
 
+## 2026-11-15 — New UI from the Stitch design (history sidebar, centred chat, drawer)
+- Why: user designed the app in Stitch and wanted the real app to match: Claude-style centred conversation, history panel on the left, black/white modes, responsive.
+- Decisions (asked): keep the design's blue accent; layout/styling only with real features (no mock fluency/pronunciation scores, bands, etc.); `design/` (Stitch export) kept local and git-ignored.
+- New: `components/{Sidebar,TopBar}.tsx`, `pages/SavedItem.tsx`, `store/uiSlice.ts`, `lib/historyUtils.ts`; `makeStore(preloaded)`; history list updates live. Removed the History tab/page. Single mode toggle in the top bar.
+- Restyled: Converse (avatar + bubbles, starter chips, pill composer, blue recording state), Improve panel (Corrected / Polished native phrasing / Why it changed / Accent tips), Grammar Coach, Essay Studio (word count + reading time), Email Assistant (alternative tones as chips). Inter + JetBrains Mono fonts.
+- Verified in the browser at desktop (measured), tablet and phone, in black and white mode; mobile drawer opens/closes. Tests: web 60, server 42.
+
 ## 2026-11-15 — Dropdown popups readable + models ranked best-first
 - Why: on the deployed site every native dropdown option (model, tense, email) was white text on a white popup (only the hovered row showed); the default model could be a weak 7B model.
 - Fix: each `<option>`/`<optgroup>` carries its own colours (`optionCls`: white/black, dark: black/white) since browsers don't reliably follow `color-scheme`. Models are sorted strongest first by a generic id-based score (`modelScore`: parameter count, Gemini pro > flash, lite/mini/nano halved; no hardcoded model names) and the default is the top-ranked one; failover list is also best-first.
