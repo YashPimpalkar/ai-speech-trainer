@@ -5,13 +5,14 @@ import { resolveSelection, setSelection, type ModelsResponse, type Sel } from '.
 export default function ModelPicker() {
   const [list, setList] = useState<ModelsResponse | null>(null)
   const [sel, setSel] = useState<Sel | null>(null)
+  const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading')
   const [err, setErr] = useState('')
 
   const load = () => {
-    setErr('')
+    setStatus('loading'); setErr('')
     fetchModels()
-      .then((l) => { setList(l); setSel(resolveSelection(l)) })
-      .catch((e) => setErr(e.message))
+      .then((l) => { setList(l); setSel(resolveSelection(l)); setStatus(l.models.length ? 'ok' : 'error'); if (!l.models.length) setErr('No models available. Check the API keys on the backend.') })
+      .catch((e) => { setErr(e.message); setStatus('error') })
   }
   useEffect(load, [])
 
@@ -23,24 +24,28 @@ export default function ModelPicker() {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto">
       <select
         aria-label="Model"
-        value={sel ? `${sel.provider}::${sel.model}` : ''}
+        title={err || undefined}
+        disabled={status !== 'ok'}
+        value={status === 'ok' && sel ? `${sel.provider}::${sel.model}` : ''}
         onChange={(e) => change(e.target.value)}
-        className="max-w-[11rem] rounded-full border border-black/30 bg-transparent px-3 py-1.5 text-xs dark:border-white/30 sm:max-w-xs"
+        // Opaque background: the native dropdown popup takes it, so options stay readable in both modes.
+        className="min-w-0 flex-1 rounded-full border border-black/30 bg-white px-3 py-1.5 text-base text-black disabled:opacity-60 dark:border-white/30 dark:bg-black dark:text-white sm:max-w-xs sm:flex-none sm:text-xs"
       >
-        {!list?.models.length && <option value="">{err || 'No models'}</option>}
-        {(['groq', 'gemini'] as const).map((p) => {
+        {status === 'loading' && <option value="">Loading models…</option>}
+        {status === 'error' && <option value="">Models unavailable</option>}
+        {status === 'ok' && (['groq', 'gemini'] as const).map((p) => {
           const items = list?.models.filter((m) => m.provider === p) ?? []
           return items.length ? (
             <optgroup key={p} label={p.toUpperCase()}>
-              {items.map((m) => <option key={m.id} value={`${p}::${m.id}`} className="text-black">{m.id}</option>)}
+              {items.map((m) => <option key={m.id} value={`${p}::${m.id}`}>{m.id}</option>)}
             </optgroup>
           ) : null
         })}
       </select>
-      <button aria-label="Refresh models" onClick={load} className="cursor-pointer text-sm opacity-70 hover:opacity-100">↻</button>
+      <button aria-label="Refresh models" title={err || 'Refresh models'} onClick={load} className="shrink-0 cursor-pointer px-1 text-base opacity-70 hover:opacity-100 sm:text-sm">↻</button>
     </div>
   )
 }

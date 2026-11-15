@@ -12,6 +12,9 @@ import Grammar from '../pages/Grammar'
 import Essay from '../pages/Essay'
 import Email from '../pages/Email'
 import Improve from '../components/Improve'
+import ModelPicker from '../components/ModelPicker'
+import { Field } from '../components/ui'
+import { fetchModels } from './api'
 
 const render = (ui: React.ReactElement, store = makeStore()) => rtlRender(<Provider store={store}>{ui}</Provider>)
 
@@ -155,5 +158,50 @@ describe('History tab', () => {
     globalThis.fetch = vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ items: [] }) })) as any
     render(<History onContinue={() => {}} />)
     expect(await screen.findByText(/Nothing here yet/)).toBeInTheDocument()
+  })
+})
+
+describe('API errors are explained', () => {
+  it('404 points at VITE_API_URL', async () => {
+    globalThis.fetch = vi.fn(async () => ({ ok: false, status: 404, json: async () => { throw new Error('not json') } })) as any
+    await expect(fetchModels()).rejects.toThrow(/VITE_API_URL/)
+  })
+  it('network failure says the API is unreachable', async () => {
+    globalThis.fetch = vi.fn(async () => { throw new TypeError('Failed to fetch') }) as any
+    await expect(fetchModels()).rejects.toThrow(/reach the API/)
+  })
+})
+
+describe('ModelPicker', () => {
+  it('shows a clear disabled state with a retry when models cannot load', async () => {
+    globalThis.fetch = vi.fn(async () => ({ ok: false, status: 404, json: async () => ({}) })) as any
+    render(<ModelPicker />)
+    const select = await screen.findByLabelText('Model')
+    await waitFor(() => expect(select).toBeDisabled())
+    expect(screen.getByText('Models unavailable')).toBeInTheDocument()
+    expect(screen.getByLabelText('Refresh models')).toBeInTheDocument()
+  })
+
+  it('lists models with an opaque background so the native popup is readable in both modes', async () => {
+    globalThis.fetch = vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ models: [{ provider: 'groq', id: 'm1' }], providers: { groq: true, gemini: false }, errors: {} }) })) as any
+    render(<ModelPicker />)
+    const select = await screen.findByLabelText('Model')
+    await waitFor(() => expect(screen.getByRole('option', { name: 'm1' })).toBeInTheDocument())
+    expect(select.className).toMatch(/\bbg-white\b/)
+    expect(select.className).toMatch(/dark:bg-black/)
+    expect(select).not.toBeDisabled()
+  })
+})
+
+describe('responsive layout', () => {
+  it('inputs use 16px text on phones (prevents iOS zoom) and smaller from sm up', () => {
+    expect(Field).toMatch(/text-base/)
+    expect(Field).toMatch(/sm:text-sm/)
+  })
+  it('Email option selects stack on phones and go 3-up from sm', () => {
+    const { container } = render(<Email />)
+    const grid = container.querySelector('.grid')!
+    expect(grid.className).toMatch(/grid-cols-1/)
+    expect(grid.className).toMatch(/sm:grid-cols-3/)
   })
 })

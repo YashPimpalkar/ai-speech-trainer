@@ -2,6 +2,10 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 html, body, #root { min-height: 100%; }
+:root { color-scheme: light; }
+.dark { color-scheme: dark; }
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
 body { @apply bg-white text-black dark:bg-black dark:text-white antialiased; font-family: ui-sans-serif, system-ui, sans-serif; }
 @keyframes pulse-ring { 0% { transform: scale(1); opacity: .6 } 100% { transform: scale(1.8); opacity: 0 } }
 .pulse-ring { animation: pulse-ring 1.4s ease-out infinite; }

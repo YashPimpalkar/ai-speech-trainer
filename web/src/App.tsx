@@ -18,15 +18,16 @@ const TABS = [
 export default function App() {
   const [tab, setTab] = useState<(typeof TABS)[number]['id']>('converse')
   return (
-    <div className="mx-auto flex h-dvh max-w-4xl flex-col px-4">
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 py-5">
+    <div className="mx-auto flex h-dvh max-w-4xl flex-col px-3 sm:px-6">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 py-3 sm:py-5">
         <h1 className="text-xl font-bold tracking-tight">Speak<span className="opacity-40">.</span>AI</h1>
-        <div className="flex items-center gap-3"><ModelPicker /><ThemeToggle /></div>
+        <div className="order-3 w-full min-w-0 sm:order-2 sm:ml-auto sm:w-auto"><ModelPicker /></div>
+        <div className="order-2 sm:order-3"><ThemeToggle /></div>
       </header>
-      <nav className="mb-2 flex shrink-0 gap-1 overflow-x-auto border-b border-black/15 dark:border-white/15">
+      <nav className="no-scrollbar mb-2 flex shrink-0 gap-1 overflow-x-auto border-b border-black/15 dark:border-white/15">
         {TABS.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`cursor-pointer whitespace-nowrap px-4 py-2 text-sm ${tab === t.id ? 'border-b-2 border-black font-semibold dark:border-white' : 'text-zinc-500 hover:text-black dark:hover:text-white'}`}>
+            className={`cursor-pointer whitespace-nowrap px-3 py-2 text-sm sm:px-4 ${tab === t.id ? 'border-b-2 border-black font-semibold dark:border-white' : 'text-zinc-500 hover:text-black dark:hover:text-white'}`}>
             {t.label}
           </button>
         ))}

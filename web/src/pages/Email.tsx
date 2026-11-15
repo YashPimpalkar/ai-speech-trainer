@@ -31,7 +31,7 @@ export default function Email() {
   }
   const full = out ? `Subject: ${out.subject}\n\n${out.body}` : ''
   const sel = (v: string, set: (s: string) => void, opts: string[]) => (
-    <select className={Field} value={v} onChange={(e) => set(e.target.value)}>{opts.map((o) => <option key={o} className="text-black">{o}</option>)}</select>
+    <select className={Field} value={v} onChange={(e) => set(e.target.value)}>{opts.map((o) => <option key={o}>{o}</option>)}</select>
   )
 
   return (
@@ -39,7 +39,7 @@ export default function Email() {
       <Card className="space-y-3">
         <label><Label>What do you want to say? (rough notes)</Label>
           <textarea className={Field} rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="need leave on Friday for family function, work handed over to Ravi" /></label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <label><Label>To</Label>{sel(recipient, setRecipient, RECIPIENTS)}</label>
           <label><Label>Tone</Label>{sel(tone, setTone, TONES)}</label>
           <label><Label>Length</Label>{sel(length, setLength, ['short', 'medium', 'long'])}</label>

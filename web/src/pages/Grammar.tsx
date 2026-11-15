@@ -36,7 +36,7 @@ export default function Grammar() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {(['tense', 'voice'] as const).map((m) => (
           <Button key={m} variant={mode === m ? 'solid' : 'ghost'} onClick={() => { setMode(m); setOut(null) }}>
             {m === 'tense' ? 'Tenses' : 'Active ⇄ Passive'}
@@ -48,14 +48,14 @@ export default function Grammar() {
         {mode === 'tense' ? (
           <label><Label>Tense</Label>
             <select className={Field} value={tense} onChange={(e) => setTense(e.target.value)}>
-              {TENSES.map((t) => <option key={t} className="text-black">{t}</option>)}
+              {TENSES.map((t) => <option key={t}>{t}</option>)}
             </select></label>
         ) : (
           <>
             <label><Label>Direction</Label>
               <select className={Field} value={direction} onChange={(e) => setDirection(e.target.value as typeof direction)}>
-                <option value="active-to-passive" className="text-black">Active → Passive</option>
-                <option value="passive-to-active" className="text-black">Passive → Active</option>
+                <option value="active-to-passive">Active → Passive</option>
+                <option value="passive-to-active">Passive → Active</option>
               </select></label>
             <label><Label>Sentence</Label>
               <textarea className={Field} rows={2} value={sentence} onChange={(e) => setSentence(e.target.value)} placeholder="Tom ate the cake." /></label>

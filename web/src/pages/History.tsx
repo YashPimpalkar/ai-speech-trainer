@@ -70,9 +70,9 @@ export default function History({ onContinue }: { onContinue: () => void }) {
       {shown.map((item) => (
         <Card key={item.id} className="text-sm">
           <details>
-            <summary className="flex cursor-pointer items-center justify-between gap-3">
+            <summary className="flex cursor-pointer flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
               <span className="min-w-0 truncate font-medium">{item.title}</span>
-              <span className="shrink-0 text-xs text-zinc-500">{item.kind} · {new Date(item.createdAt).toLocaleString()}</span>
+              <span className="text-xs text-zinc-500 sm:shrink-0">{item.kind} · {new Date(item.createdAt).toLocaleString()}</span>
             </summary>
             <div className="mt-3 space-y-3 text-left"><Detail item={item} /></div>
           </details>

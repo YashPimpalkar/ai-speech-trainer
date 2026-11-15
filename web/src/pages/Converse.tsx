@@ -100,7 +100,7 @@ export default function Converse() {
       </div>
 
       {/* Pinned composer */}
-      <div className="shrink-0 pb-4 pt-2">
+      <div className="shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">
         <div className="mx-auto max-w-2xl">
           <ErrorMsg text={error} />
           <div className="flex items-center gap-2 rounded-full border border-black/25 p-1.5 pl-2 dark:border-white/25">
@@ -113,12 +113,12 @@ export default function Converse() {
               {recording ? '■' : '🎤'}
             </button>
             <input
-              className="min-w-0 flex-1 bg-transparent px-2 text-sm outline-none" placeholder="Or type here and press Enter…" value={draft}
+              className="min-w-0 flex-1 bg-transparent px-2 text-base outline-none sm:text-sm" placeholder="Or type here and press Enter…" value={draft}
               onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && send(draft)}
             />
             <Button onClick={() => send(draft)} disabled={loading || !draft.trim()}>Send</Button>
           </div>
-          <div className="mt-2 flex justify-center gap-2">
+          <div className="mt-2 flex flex-wrap justify-center gap-2">
             <Button variant="ghost" className="!py-1 !text-xs" onClick={finish} disabled={loading || !msgs.some((m) => m.role === 'user')}>End &amp; Review</Button>
             <Button variant="ghost" className="!py-1 !text-xs" onClick={() => { stopSpeaking(); dispatch(resetConverse()) }}>New chat</Button>
           </div>

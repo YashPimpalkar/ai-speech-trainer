@@ -1,6 +1,14 @@
 # Changelog
 Append newest first. Format: date — what/why — files — tests.
 
+## 2026-11-15 — Responsive layout (phone/tablet/desktop) + model dropdown + clearer API errors
+- Why: UI wasn't built for small screens; the model dropdown heading rendered blank (white text on the popup's white background) and a failed model list showed a bare "Request failed (404)".
+- UI: header stacks on phones (picker full width), tabs scroll without a scrollbar, 16px inputs on phones (no iOS zoom), 40px touch targets, Email selects stack, History rows stack, composer respects the safe area; `viewport-fit=cover`; `color-scheme` follows the theme so native popups match.
+- Model picker: opaque bg/text per theme; options no longer force black text; shows "Loading models…" / "Models unavailable" (disabled, with the reason as tooltip) and a retry.
+- API errors: 404 -> "API not found... check VITE_API_URL"; network failure -> "Can't reach the API... VITE_API_URL / CORS_ORIGINS"; 5xx -> friendly message.
+- Files: web/src/components/{ModelPicker,ui}.tsx, App.tsx, pages/*, lib/api.ts, index.css, index.html, lib/app.test.tsx.
+- Verified in the browser at 375px, 768px and desktop; computed colours checked in dark and light. Tests: web 30, server 42.
+
 ## 2026-11-15 — Fix: frontend `web/vercel.json` broke the Vercel build
 - Why: the file (added in 8a7c91e) was a copy of the root single-project config: `functions` pointed at a non-existent `api/index.mjs` (Vercel error `unused_function`) and `outputDirectory: web/dist` is wrong when Root Directory is already `web`.
 - Fix: `web/vercel.json` now only sets `buildCommand: npm run build` and `outputDirectory: dist`.
