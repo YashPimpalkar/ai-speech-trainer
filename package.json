@@ -1,0 +1,11 @@
+{
+  "name": "ai-speech-trainer",
+  "private": true,
+  "workspaces": ["server", "web"],
+  "scripts": {
+    "dev": "concurrently -n server,web -c gray,white \"npm run dev -w server\" \"npm run dev -w web\"",
+    "build": "npm run build -w web && npm run build -w server",
+    "test": "npm test -w server && npm test -w web"
+  },
+  "devDependencies": { "concurrently": "^9.1.0" }
+}
