@@ -1,6 +1,27 @@
 # Changelog
 Append newest first. Format: date — what/why — files — tests.
 
+## 2026-11-13 — Two Vercel projects (backend `server/`, frontend `web/`)
+- Why: user wants backend and frontend deployed separately, both on Vercel.
+- Added `server/vercel.json`, `server/api/index.mjs`, `server/public/.gitkeep` (backend project, Root Directory = `server`). Frontend project uses Root Directory = `web` with `VITE_API_URL`. Root `vercel.json` + `api/` remain for the single-project option.
+- Verified locally: server build, then `server/api/index.mjs` via plain http server: health OK, CORS allowed for the frontend origin, preflight 204, blocked for other origins; `VITE_API_URL` is baked into the web bundle.
+- Not tested on Vercel itself (needs account login).
+- Tests: server 41 (new: vercel-config), web 21.
+
+## 2026-11-13 — Single Vercel project (static web + serverless API)
+- Why: user wants backend and frontend both on Vercel.
+- Server: `lazyStore` (connect to Postgres on first request, retry after failure), `bootstrap.ts` (shared wiring), `handler.ts` (Vercel entry); `index.ts` now just calls `buildApp().listen`.
+- Root: `api/index.mjs` re-exports `server/dist/handler.js`; `vercel.json` (build `npm run build`, output `web/dist`, `/api/*` rewrite, maxDuration 60).
+- Verified locally: full `npm run build`, then loaded `api/index.mjs` in a plain http server: health, models, history (Neon), chat (Groq), multipart STT reach the app.
+- Tests: server 38 (new: lazy store, handler), web 21.
+
+## 2026-11-13 — Separate deployment support (Vercel frontend + Render API)
+- Why: user wants frontend and backend deployed separately.
+- Web: `VITE_API_URL` base URL (`web/src/lib/apiUrl.ts`), used by every API/TTS/STT call; empty keeps dev proxy behaviour.
+- Server: `CORS_ORIGINS` env restricts allowed origins (`parseOrigins`, `createApp(deps, {corsOrigins})`); open when unset.
+- Added `render.yaml`, `web/.env.example`, `docs/DEPLOY.md`. Verified `npm run build -w server` + `node dist/index.js` (health OK, Postgres connected, CORS allow/deny).
+- Tests: server 35, web 21 (new: cors, apiUrl).
+
 ## 2026-11-12 — Postgres (Neon) history + Redux
 - Why: user wanted all activity stored in the database and app state managed with Redux.
 - Server: `pg` store (`server/src/history.ts`, table `history_items`, auto-created) + REST `/api/history` (list/get/create/update/delete); in-memory fallback when `DATABASE_URL` is unset. `DATABASE_URL` lives only in `server/.env`.

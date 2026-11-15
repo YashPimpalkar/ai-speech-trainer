@@ -1,0 +1,20 @@
+# Render Blueprint: the API (Express). The frontend deploys separately to Vercel (root directory: web).
+services:
+  - type: web
+    name: ai-speech-trainer-api
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build -w server
+    startCommand: npm start -w server
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS   # your Vercel URL, e.g. https://ai-speech-trainer.vercel.app
+        sync: false
