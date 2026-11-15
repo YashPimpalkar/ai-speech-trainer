@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { post } from '../lib/api'
+import { useAppDispatch, useAppSelector } from '../store'
+import { saveItem } from '../store/historySlice'
+import { setResult } from '../store/resultsSlice'
 import { useRun } from '../lib/useRun'
 import Improve from '../components/Improve'
 import Listen from '../components/Listen'
@@ -7,11 +10,17 @@ import { Button, Card, ErrorMsg, Field, Label } from '../components/ui'
 
 export default function Essay() {
   const [topic, setTopic] = useState('')
-  const [out, setOut] = useState<{ title: string; essay: string; wordCount: number } | null>(null)
+  const dispatch = useAppDispatch()
+  const out = (useAppSelector((st) => st.results.essay) ?? null) as { title: string; essay: string; wordCount: number } | null
   const [retell, setRetell] = useState('')
   const { loading, error, run } = useRun()
 
-  const go = async () => { const r = await run(() => post<NonNullable<typeof out>>('essay', { topic })); if (r) setOut(r) }
+  const go = async () => {
+    const r = await run(() => post<NonNullable<typeof out>>('essay', { topic }))
+    if (!r) return
+    dispatch(setResult({ page: 'essay', value: r }))
+    void dispatch(saveItem({ kind: 'essay', title: topic, payload: { input: { topic }, output: r } }))
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">

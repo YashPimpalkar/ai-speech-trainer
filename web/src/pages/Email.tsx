@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { post } from '../lib/api'
+import { useAppDispatch, useAppSelector } from '../store'
+import { saveItem } from '../store/historySlice'
+import { setResult } from '../store/resultsSlice'
 import { useRun } from '../lib/useRun'
 import Improve from '../components/Improve'
 import Listen from '../components/Listen'
@@ -15,13 +18,16 @@ export default function Email() {
   const [recipient, setRecipient] = useState(RECIPIENTS[0])
   const [tone, setTone] = useState(TONES[0])
   const [length, setLength] = useState('medium')
-  const [out, setOut] = useState<Result | null>(null)
+  const dispatch = useAppDispatch()
+  const out = (useAppSelector((st) => st.results.email) ?? null) as Result | null
   const [copied, setCopied] = useState(false)
   const { loading, error, run } = useRun()
 
   const go = async () => {
     const r = await run(() => post<Result>('email', { notes, ownDraft: ownDraft || undefined, recipient, tone, length }))
-    if (r) setOut(r)
+    if (!r) return
+    dispatch(setResult({ page: 'email', value: r }))
+    void dispatch(saveItem({ kind: 'email', title: r.subject, payload: { input: { notes, ownDraft, recipient, tone, length }, output: r } }))
   }
   const full = out ? `Subject: ${out.subject}\n\n${out.body}` : ''
   const sel = (v: string, set: (s: string) => void, opts: string[]) => (

@@ -1,6 +1,23 @@
 # Changelog
 Append newest first. Format: date — what/why — files — tests.
 
+## 2026-11-12 — Postgres (Neon) history + Redux
+- Why: user wanted all activity stored in the database and app state managed with Redux.
+- Server: `pg` store (`server/src/history.ts`, table `history_items`, auto-created) + REST `/api/history` (list/get/create/update/delete); in-memory fallback when `DATABASE_URL` is unset. `DATABASE_URL` lives only in `server/.env`.
+- Web: Redux Toolkit store (`web/src/store`: converse, history, results slices). Converse chat is saved/updated in one row per conversation; Grammar, Essay, Email and Improve results are saved on generation. New History tab: filter, view, continue a chat, delete. Latest results survive tab switches.
+- Note: no user accounts yet, so history is shared by everyone using this server.
+- Tests: server 32 (history CRUD/filter/validation), web 19 (store slices, serialized saves, History tab).
+
+## 2026-11-12 — Fix: Grammar "all tenses overview" failed validation
+- Why: the model returned `structure` as an object; the strict string schema rejected it ("expected string, received object").
+- Files: server/src/json.ts (`toText`, `looseText`), server/src/agents/grammar.ts (all fields lenient), web/src/pages/Grammar.tsx (keep line breaks), server/tests/agents.test.ts.
+- Tests: new "grammar tolerates structured values" test (failed first, now passes). Server 28, web 10.
+
+## 2026-11-12 — Converse: Claude-style chat layout
+- Why: whole page scrolled and the input bar moved away; user wanted a chat where only messages scroll, newest at the bottom, composer pinned.
+- Files: web/src/pages/Converse.tsx (scroll area + pinned pill composer, auto-scroll to latest, review shown inside the chat), web/src/App.tsx (full-height layout; other tabs scroll in their own area), web/src/lib/app.test.tsx.
+- Tests: new "Converse chat layout" test (failed first, now passes). Web 10, server 27.
+
 ## 2026-11-12 — Fix: Improve panel text was right-aligned in Converse
 - Why: the panel sat inside the right-aligned user-message wrapper and inherited `text-right`, making corrections hard to read.
 - Files: web/src/components/Improve.tsx (`text-left` on panel), web/src/lib/app.test.tsx.
