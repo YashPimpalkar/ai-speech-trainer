@@ -8,6 +8,7 @@ import Converse from '../pages/Converse'
 import Grammar from '../pages/Grammar'
 import Essay from '../pages/Essay'
 import Email from '../pages/Email'
+import Improve from '../components/Improve'
 
 beforeEach(() => { localStorage.clear(); document.documentElement.className = '' })
 
@@ -86,3 +87,15 @@ describe('every feature offers Improve', () => {
 })
 
 function cleanupAndRender(ui: React.ReactElement) { document.body.innerHTML = ''; render(ui) }
+
+describe('Improve panel layout', () => {
+  it('is left-aligned even inside a right-aligned parent', async () => {
+    const { setCurrentModel } = await import('./api')
+    setCurrentModel({ models: [], providers: {}, errors: {} }, { provider: 'groq', model: 'm' })
+    globalThis.fetch = vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ corrected: 'a', improved: 'b', why: ['w'], accentTips: ['t'] }) })) as any
+    render(<div className="text-right"><Improve text="hello" /></div>)
+    fireEvent.click(screen.getByText(/Improve my English/))
+    const panel = await screen.findByTestId('improve-panel')
+    expect(panel).toHaveClass('text-left')
+  })
+})

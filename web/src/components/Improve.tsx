@@ -17,7 +17,7 @@ export default function Improve({ text, label = 'Improve my English' }: { text: 
       </Button>
       <ErrorMsg text={error} />
       {out && (
-        <div data-testid="improve-panel" className="mt-3 space-y-3 rounded-xl border border-black/20 p-4 text-sm dark:border-white/20">
+        <div data-testid="improve-panel" className="mt-3 space-y-3 rounded-xl text-left border border-black/20 p-4 text-sm dark:border-white/20">
           <div><span className="text-xs uppercase tracking-widest text-zinc-500">Corrected</span><p>{out.corrected}</p></div>
           <div>
             <span className="text-xs uppercase tracking-widest text-zinc-500">Improved (male coach)</span>
