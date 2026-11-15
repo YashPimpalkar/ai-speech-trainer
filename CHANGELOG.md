@@ -1,6 +1,12 @@
 # Changelog
 Append newest first. Format: date — what/why — files — tests.
 
+## 2026-11-15 — Fix: frontend `web/vercel.json` broke the Vercel build
+- Why: the file (added in 8a7c91e) was a copy of the root single-project config: `functions` pointed at a non-existent `api/index.mjs` (Vercel error `unused_function`) and `outputDirectory: web/dist` is wrong when Root Directory is already `web`.
+- Fix: `web/vercel.json` now only sets `buildCommand: npm run build` and `outputDirectory: dist`.
+- Tests: new `web/src/lib/vercelConfig.test.ts` (failed first). Server 42, web 24.
+- Git: all commits are authored as Yash Pimpalkar (history rewritten 2026-11-15).
+
 ## 2026-11-13 — Fix: Vercel backend build failed ("No entrypoint found in output directory: public")
 - Why: Vercel auto-detected `express` and applied its Express preset, which expects an entry file in the output directory instead of our static `public/` + `api/` function setup.
 - Fix: `"framework": null` in `server/vercel.json` to opt out of detection. If it ever recurs, set Framework Preset to "Other" in the project's Build & Output settings.

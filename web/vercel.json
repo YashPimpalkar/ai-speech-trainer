@@ -1,6 +1,4 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "web/dist",
-  "functions": { "api/index.mjs": { "maxDuration": 60 } },
-  "rewrites": [{ "source": "/api/(.*)", "destination": "/api/index.mjs" }]
+  "outputDirectory": "dist"
 }
